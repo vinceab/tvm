@@ -324,6 +324,31 @@ def arm_cpu(model="unknown", options=None):
     return Target(" ".join(["llvm"] + opts))
 
 
+def stm32mp1(options=None):
+    """Return stm32mp1 target and the associated cross compiler based on the SDK.
+
+    Parameters
+    ----------
+    options : str or list of str
+        Additional options
+    """
+
+    from tvm.contrib import cc
+
+    if "TVM_STM32MP_SDK_PATH" not in os.environ or  os.getenv("TVM_STM32MP_SDK_PATH") == "":
+        raise RuntimeError("Require environment variable TVM_STM32MP_SDK_PATH providing the SDK path directory\n"
+                           "example: export TVM_STM32MP_SDK_PATH=<your path>/STM32MP15-Ecosystem-v2.1.0/Developer-Package/SDK")
+
+    sdk_path = os.environ["TVM_STM32MP_SDK_PATH"]
+    cc = cc.cross_compiler(sdk_path + '/sysroots/x86_64-ostl_sdk-linux/usr/bin/arm-ostl-linux-gnueabi/arm-ostl-linux-gnueabi-g++',
+                           options=['-mthumb',
+                                    '-mfpu=neon-vfpv4',
+                                    '-mfloat-abi=hard',
+                                    '-mcpu=cortex-a7',
+                                    '--sysroot=' + sdk_path + '/sysroots/cortexa7t2hf-neon-vfpv4-ostl-linux-gnueabi'])
+
+    return arm_cpu("stm32mp1", options), cc
+
 def rasp(options=None):
     """Return a Raspberry 3b target.
 
